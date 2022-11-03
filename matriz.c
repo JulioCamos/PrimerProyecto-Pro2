@@ -1,6 +1,21 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "head.h"
+
+typedef struct node{
+    int pos, value;
+    struct node* nxt;
+}Columns;
+
+typedef struct nodeX{
+    int index;
+    Columns* nxtcolumn; 
+    struct nodeX* nextindex; 
+}Indice;
+
+typedef struct nodeY{
+    int height, wide;
+    struct nodeX* nxtindex;
+}Matrixinfo;
 
 Matrixinfo* Loadlist(int sizex, int sizey, int arreglo[][sizex]){
     
@@ -132,6 +147,15 @@ void printmatrix(Matrixinfo* matri){
     
     //se recorre la lista de listas, imprimiendo el valor de los nodos
     //existentes
+    
+    if(matri->nxtindex == NULL){
+        for(j = 0; j <= y; j++){
+            for(i = 0; i <= x; i++){
+                printf("0\t");
+            }
+            printf("\n");
+        }
+    }
 
     while(j <= y){
         
@@ -182,7 +206,9 @@ void printmatrix(Matrixinfo* matri){
                 }
                 i++;
             }
-            p = p->nextindex;
+            if(p->nextindex != NULL){
+                p = p->nextindex;
+            }
             printf("\n");
             j++;
             i = 0;
@@ -425,6 +451,182 @@ Matrixinfo* insertelement(int i, int j, int z, Matrixinfo* M){
             return M;
         }    
         auxindex = auxindex->nextindex;
+    }
+}
+
+Matrixinfo* SumarMatrices(Matrixinfo* M1, Matrixinfo* M2){
+    
+    //"SumarMatrices" suma los elementos de ambas matrices uno a uno,
+    //cargándolos en una nueva matriz
+    
+    if((M1->wide != M2->wide) || (M1->height != M2->height)){
+        printf("Dimensiones inválidas");
+        return M1;
+    }
+    
+    //se verifica si alguna de las dos matrices, está "vacía"; de ser el caso, 
+    //se devuelve la otra matriz
+    
+    if(M1->nxtindex == NULL){
+        return M2;
+    }
+    
+    if(M2->nxtindex == NULL){
+        return M1;
+    }
+    
+    Indice* auxindice1 = M1->nxtindex; 
+    Indice* auxindice2 = M2->nxtindex;
+    Columns* auxcolumna1;
+    Columns* auxcolumna2;
+    
+    Matrixinfo* newmatrix;
+    
+    register int i, j;
+    
+    newmatrix = ((Matrixinfo*)malloc(sizeof(Matrixinfo)));
+    newmatrix->nxtindex = NULL;
+    newmatrix->height = M1->height;
+    newmatrix->wide = M1->wide;
+    
+    //se recorrerá ambas matrices fila a fila
+    
+    for(j = 0; j <= M1->height; j++){
+        
+        //si las posiciones de las filas actuales coinciden, se recorran las
+        //columnas a las que apuntan, sumando y cargando los valores en la
+        //nueva matriz
+        
+        if(auxindice1->index == auxindice2->index){
+            
+            auxcolumna1 = auxindice1->nxtcolumn;
+            auxcolumna2 = auxindice2->nxtcolumn;
+            
+            for(i = 0; i <= M1->wide; i++){
+                
+                //los valores se sumarán solo si las posiciones de las columnas
+                //coinciden
+                
+                if(auxcolumna1->pos == auxcolumna2->pos){
+                    
+                    int suma = auxcolumna1->value + auxcolumna2->value;
+                    newmatrix = insertelement(auxcolumna1->pos, auxindice1->index, suma, newmatrix);
+                    
+                    //si los auxiliares que recorren las columnas están ambos
+                    //apuntando a nulo, es porque no quedan otras columnas
+                    //que recorrer
+                    
+                    if((auxcolumna1->nxt == NULL) && (auxcolumna2->nxt == NULL)){
+                        break;
+                    }
+                    
+                    //si la posición de ambas columnas es mayor al "i", actual
+                    //es porque ambos auxiliares están "adelantados", por lo
+                    //que se iguala "i"; de otra manera, "i" pasaría por filas
+                    //llenas de 0
+                    
+                    if(auxcolumna1->pos > i){
+                        i = auxcolumna1->pos;
+                    }
+                    
+                    //el auxiliar que recorre las columnas avanzará, solamente
+                    //si el siguiente nodo no es nulo
+                    
+                    if(auxcolumna1->nxt != NULL){
+                        auxcolumna1 = auxcolumna1->nxt;
+                    }
+                    
+                    if(auxcolumna2->nxt != NULL){
+                        auxcolumna2 = auxcolumna2->nxt;
+                    }
+                }
+                
+                //sabemos que la posición de las columnas actuales son
+                //disparejas, se comprueba si alguna de las dos es igual
+                //al "i"; de ser el caso, se avanza a la siguiente el
+                //auxiliar que sea igual
+                
+                if(auxcolumna1->pos == i){
+                    newmatrix = insertelement(auxcolumna1->pos, auxindice1->index, auxcolumna1->value, newmatrix);
+                    
+                    if(auxcolumna1->nxt != NULL){
+                        auxcolumna1 = auxcolumna1->nxt;
+                    }
+                }
+                
+                if(auxcolumna2->pos == i){
+                    newmatrix = insertelement(auxcolumna2->pos, auxindice2->index, auxcolumna2->value, newmatrix);
+                    
+                    if(auxcolumna2->nxt != NULL){
+                        auxcolumna2 = auxcolumna2->nxt;
+                    }
+                }
+            }
+            
+            //si los auxiliares que recorren los índices terminan apuntando a
+            //nulo, es porque ya recorrieron todas las filas de la matriz
+            
+            if((auxindice1->nextindex == NULL) && (auxindice2->nextindex == NULL)){
+                return newmatrix;
+            }
+            
+            if(auxindice1->index > j){
+                j = auxindice1->index;
+            }
+            
+            //los auxiliares que recorren las filas solo avanzarán si el
+            //siguiente elemento no es nulo
+            
+            if(auxindice1->nextindex != NULL){
+                auxindice1 = auxindice1->nextindex;
+            }
+            
+            if(auxindice2->nextindex != NULL){
+                auxindice2 = auxindice2->nextindex;
+            }
+            
+            continue;
+        }
+        
+        //si la posición de las filas en las que se encuentran los auxiliares
+        //son disparejas, pero alguna de las dos coincide con "j", se recorren
+        //esa fila, cargando sus elementos en la nueva matriz
+        
+        if(auxindice1->index == j){
+            for(auxcolumna1 = auxindice1->nxtcolumn; auxcolumna1 != NULL; auxcolumna1 = auxcolumna1->nxt){
+                newmatrix = insertelement(auxcolumna1->pos, auxindice1->index, auxcolumna1->value, newmatrix);
+                
+                if(auxcolumna1->nxt == NULL){
+                    break;
+                }
+            }
+            
+            if(auxindice1->nextindex != NULL){
+                auxindice1 = auxindice1->nextindex;
+            }
+            
+        }
+        
+        if(auxindice2->index == j){
+            for(auxcolumna2 = auxindice2->nxtcolumn; auxcolumna2 != NULL; auxcolumna2 = auxcolumna2->nxt){
+                newmatrix = insertelement(auxcolumna2->pos, auxindice2->index, auxcolumna2->value, newmatrix);
+                
+                if(auxcolumna2->nxt == NULL){
+                    break;   
+                }
+                
+                if(auxindice2->nextindex != NULL){
+                    auxindice2 = auxindice2->nextindex;
+                }
+            }
+        }
+        
+        //si después de avanzar, ambos auxiliares terminan en nulo, es porque
+        //ya recorrieron todas las filas de la matriz
+        
+        if((auxindice1->nextindex == NULL) && (auxindice2->nextindex == NULL) && (j == M1->wide)){
+            return newmatrix;
+        }
     }
 }
 

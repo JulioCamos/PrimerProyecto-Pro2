@@ -18,7 +18,7 @@ typedef struct nodeY{
 }Matrixinfo;
 
 
-Matrixinfo* Loadlist();
+Matrixinfo* Loadlist(int sizex, int sizey, int arreglo[][sizey]);
 //tomar un arreglo y pasarlo a la lista de listas
 
 int obtenerelemento(int i, int j, Matrixinfo* m);
@@ -29,6 +29,9 @@ void printmatrix(Matrixinfo* matri);
 
 Matrixinfo* insertelement(int i, int j, int z, Matrixinfo* M);
 //insertar un elemento en la lista de listas, en la posición dada
+
+Matrixinfo* SumarMatrices(Matrixinfo* M1, Matrixinfo* M2);
+//suma las dos matrices dadas
 
 Matrixinfo* ProductoPorEscalar(int e, Matrixinfo* mat);
 //multiplicar la matriz por un escalar
